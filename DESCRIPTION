@@ -9,7 +9,5 @@ Description: Complete R package introspection for LLM consumption. Surfaces
     dependencies. Output is structured markdown suitable for any LLM.
 License: MIT + file LICENSE
 Encoding: UTF-8
-Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.3
 Suggests:
     tinytest
