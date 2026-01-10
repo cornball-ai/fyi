@@ -1,0 +1,25 @@
+\name{fyi}
+\alias{fyi}
+\title{Get Complete Package Information for LLMs}
+\description{The main function - returns everything an LLM needs to understand a package, including exports, internals, options, and optionally full documentation.}
+\usage{
+fyi(package, src_dir, internals, options, exports, docs)
+}
+\arguments{
+  \item{package}{Character. Package name.}
+  \item{src_dir}{Optional path to source directory for options extraction.}
+  \item{internals}{Logical. Include internal functions? Default TRUE.}
+  \item{options}{Logical. Include option names? Default TRUE.}
+  \item{exports}{Logical. Include exported functions? Default TRUE.}
+  \item{docs}{Logical. Include full documentation? Default FALSE (can be verbose).}
+}
+\value{
+Character string of markdown, invisibly. Also prints to console.
+}
+\examples{
+\dontrun{
+fyi("sttapi")
+fyi("llamaR", internals = TRUE, options = FALSE)
+fyi("sttapi", docs = TRUE)  # Include full help docs
+}
+}
