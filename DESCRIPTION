@@ -1,0 +1,14 @@
+Package: fyi
+Title: For Your Information - R Package Introspection for LLMs
+Version: 0.1.0
+Authors@R:
+    person("Troy", "Hernandez", email = "troy@cornball.ai", role = c("aut", "cre"))
+Description: Introspect R packages for LLM consumption. Surfaces internal
+    (non-exported) functions, option names, dependencies, and more - the stuff
+    that btw misses. Output is structured markdown suitable for any LLM.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
+Suggests:
+    tinytest
