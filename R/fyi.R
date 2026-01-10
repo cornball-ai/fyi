@@ -1,13 +1,14 @@
 #' Get Complete Package Information for LLMs
 #'
 #' The main function - returns everything an LLM needs to understand a package,
-#' especially the internals that btw misses.
+#' including exports, internals, options, and optionally full documentation.
 #'
 #' @param package Character. Package name.
 #' @param src_dir Optional path to source directory for options extraction.
 #' @param internals Logical. Include internal functions? Default TRUE.
 #' @param options Logical. Include option names? Default TRUE.
 #' @param exports Logical. Include exported functions? Default TRUE.
+#' @param docs Logical. Include full documentation? Default FALSE (can be verbose).
 #'
 #' @return Character string of markdown, invisibly. Also prints to console.
 #' @export
@@ -16,15 +17,16 @@
 #' \dontrun{
 #' fyi("sttapi")
 #' fyi("llamaR", internals = TRUE, options = FALSE)
+#' fyi("sttapi", docs = TRUE)  # Include full help docs
 #' }
-fyi <- function(package, src_dir = NULL, internals = TRUE, options = TRUE, exports = TRUE) {
+fyi <- function(package, src_dir = NULL, internals = TRUE, options = TRUE,
+                exports = TRUE, docs = FALSE) {
   sections <- character()
 
   # Header
   sections <- c(sections, paste0("# fyi: ", package, "\n"))
 
   # Exports
-
   if (exports) {
     exp_df <- fyi_exports(package)
     sections <- c(sections, .format_exports_md(exp_df, package), "\n")
@@ -40,6 +42,15 @@ fyi <- function(package, src_dir = NULL, internals = TRUE, options = TRUE, expor
   if (options) {
     opt_df <- fyi_options(package, src_dir = src_dir)
     sections <- c(sections, .format_options_md(opt_df, package), "\n")
+  }
+
+  # Documentation
+  if (docs) {
+    docs_output <- capture.output(fyi_docs(package))
+    sections <- c(sections, paste(docs_output, collapse = "\n"), "\n")
+  } else {
+    # Just show topic list
+    sections <- c(sections, .format_docs_summary_md(package), "\n")
   }
 
   result <- paste(sections, collapse = "\n")
