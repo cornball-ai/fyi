@@ -1,3 +1,69 @@
+#' Ensure Package Docs Exist in Cache
+#'
+#' Generates fyi.md and man-md/ docs for any installed package into a
+#' central cache (~/.fyi/<package>/). Use this for third-party packages
+#' where you can't add files to the package directory.
+#'
+#' @param package Character. Package name.
+#' @param force Logical. Regenerate even if docs exist? Default FALSE.
+#'
+#' @return Path to the package's fyi directory, invisibly.
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' # Ensure docs exist for torch (generates if missing)
+#' fyi_cache("torch")
+#' # Returns: ~/.fyi/torch/
+#'
+#' # LLM can then read:
+#' #   ~/.fyi/torch/fyi.md
+#' #   ~/.fyi/torch/man-md/nn_linear.md
+#'
+#' # Force regeneration
+#' fyi_cache("torch", force = TRUE)
+#' }
+fyi_cache <- function(package, force = FALSE) {
+ cache_dir <- file.path(Sys.getenv("HOME"), ".fyi", package)
+  fyi_path <- file.path(cache_dir, "fyi.md")
+  manmd_dir <- file.path(cache_dir, "man-md")
+
+  # Check if already cached
+  if (!force && file.exists(fyi_path) && dir.exists(manmd_dir)) {
+    message("Using cached docs: ", cache_dir)
+    return(invisible(cache_dir))
+  }
+
+  # Create cache directory
+  if (!dir.exists(cache_dir)) {
+    dir.create(cache_dir, recursive = TRUE)
+  }
+
+  # Generate fyi.md
+  use_fyi_md(package, path = fyi_path)
+
+  # Generate man-md/
+  use_fyi_docs(package, dir = manmd_dir)
+
+  message("Cached docs for '", package, "' in ", cache_dir)
+  invisible(cache_dir)
+}
+
+#' Get Cache Path for a Package
+#'
+#' Returns the path where cached docs would be stored for a package.
+#'
+#' @param package Character. Package name.
+#' @return Character path to ~/.fyi/<package>/
+#' @export
+#'
+#' @examples
+#' fyi_cache_path("torch")
+#' # Returns: "~/.fyi/torch"
+fyi_cache_path <- function(package) {
+  file.path(Sys.getenv("HOME"), ".fyi", package)
+}
+
 #' Create Persistent fyi.md File
 #'
 #' Generates package information and writes it to a markdown file for
