@@ -25,10 +25,11 @@ fyi_help_topics <- function(package) {
 
 #' Get Help Documentation for a Topic
 #'
-#' Extracts help documentation as plain text, suitable for LLM consumption.
+#' Extracts help documentation as markdown, suitable for LLM consumption.
 #'
 #' @param topic Character. The topic to get help for.
 #' @param package Character. Package name.
+#' @param format Output format: "markdown" (default, clean) or "text" (Rd2txt).
 #'
 #' @return Character string of help text, invisibly. Also prints to console.
 #' @export
@@ -36,8 +37,11 @@ fyi_help_topics <- function(package) {
 #' @examples
 #' \dontrun{
 #' fyi_help("transcribe", "sttapi")
+#' fyi_help("transcribe", "sttapi", format = "text")
 #' }
-fyi_help <- function(topic, package) {
+fyi_help <- function(topic, package, format = c("markdown", "text")) {
+  format <- match.arg(format)
+
   # Get the Rd database
   db <- tools::Rd_db(package)
 
@@ -59,11 +63,16 @@ fyi_help <- function(topic, package) {
     stop("Topic '", topic, "' not found in package '", package, "'.", call. = FALSE)
   }
 
-  # Convert Rd to text
   rd <- db[[rd_name]]
-  txt <- capture.output(tools::Rd2txt(rd, outputEncoding = "UTF-8"))
 
-  result <- paste(txt, collapse = "\n")
+  # Convert Rd to output format
+  if (format == "markdown") {
+    result <- rd2md(rd)
+  } else {
+    txt <- capture.output(tools::Rd2txt(rd, outputEncoding = "UTF-8"))
+    result <- paste(txt, collapse = "\n")
+  }
+
   cat(result, "\n")
   invisible(result)
 }
@@ -74,6 +83,7 @@ fyi_help <- function(topic, package) {
 #'
 #' @param package Character. Package name.
 #' @param topics Optional character vector of specific topics to include.
+#' @param format Output format: "markdown" (default, clean) or "text" (Rd2txt).
 #'
 #' @return Character string of markdown, invisibly. Also prints to console.
 #' @export
@@ -82,8 +92,10 @@ fyi_help <- function(topic, package) {
 #' \dontrun{
 #' fyi_docs("sttapi")
 #' fyi_docs("sttapi", topics = c("transcribe", "set_stt_base"))
+#' fyi_docs("sttapi", format = "text")
 #' }
-fyi_docs <- function(package, topics = NULL) {
+fyi_docs <- function(package, topics = NULL, format = c("markdown", "text")) {
+  format <- match.arg(format)
   db <- tools::Rd_db(package)
 
   if (length(db) == 0) {
@@ -122,19 +134,22 @@ fyi_docs <- function(package, topics = NULL) {
     topic_name <- sub("\\.Rd$", "", nm)
     rd <- db[[nm]]
 
-    # Get the title
-    title <- .get_rd_title(rd)
-
-    sections <- c(sections, paste0("## ", topic_name, "\n"))
-    if (!is.null(title) && title != topic_name) {
-      sections <- c(sections, paste0("*", title, "*\n"))
+    if (format == "markdown") {
+      # Clean markdown output
+      sections <- c(sections, paste0("## ", topic_name), "")
+      sections <- c(sections, rd2md(rd), "")
+    } else {
+      # Legacy Rd2txt output
+      title <- .get_rd_title(rd)
+      sections <- c(sections, paste0("## ", topic_name, "\n"))
+      if (!is.null(title) && title != topic_name) {
+        sections <- c(sections, paste0("*", title, "*\n"))
+      }
+      txt <- capture.output(tools::Rd2txt(rd, outputEncoding = "UTF-8"))
+      sections <- c(sections, "```")
+      sections <- c(sections, txt)
+      sections <- c(sections, "```\n")
     }
-
-    # Convert to text
-    txt <- capture.output(tools::Rd2txt(rd, outputEncoding = "UTF-8"))
-    sections <- c(sections, "```")
-    sections <- c(sections, txt)
-    sections <- c(sections, "```\n")
   }
 
   result <- paste(sections, collapse = "\n")
