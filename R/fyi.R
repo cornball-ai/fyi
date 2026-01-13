@@ -1,30 +1,51 @@
 #' Ensure Package Docs Exist in Cache
 #'
 #' Generates fyi.md and man-md/ docs for any installed package into a
-#' central cache (~/.fyi/<package>/). Use this for third-party packages
-#' where you can't add files to the package directory.
+#' central cache (~/.fyi/<package>/). Use this for all packages to keep
+#' documentation in a uniform location.
 #'
 #' @param package Character. Package name.
 #' @param force Logical. Regenerate even if docs exist? Default FALSE.
+#' @param pattern Optional regex to filter exports/internals/topics in fyi.md,
+#'   and which doc files to generate in man-md/.
+#' @param max_exports Maximum exports in fyi.md. Default NULL (all).
+#' @param max_internals Maximum internals in fyi.md. Use 0 to skip. Default NULL.
+#' @param max_topics Maximum doc topics to list in fyi.md. Default NULL (all).
+#' @param internals Include internal functions in fyi.md? Default TRUE.
+#' @param docs_pattern Optional separate pattern for man-md/ files
+#'   (if different from fyi.md pattern).
 #'
 #' @return Path to the package's fyi directory, invisibly.
 #' @export
 #'
 #' @examples
 #' \dontrun{
-#' # Ensure docs exist for torch (generates if missing)
-#' fyi_cache("torch")
-#' # Returns: ~/.fyi/torch/
+#' # Cache all docs for a small package
+#' fyi_cache("sttapi")
 #'
-#' # LLM can then read:
-#' #   ~/.fyi/torch/fyi.md
-#' #   ~/.fyi/torch/man-md/nn_linear.md
+#' # For large packages, filter to reduce fyi.md size
+#' # (man-md/ files still generated for on-demand reading)
+#' fyi_cache("torch",
+#'           max_exports = 100,
+#'           max_internals = 0,
+#'           max_topics = 100)
+#'
+#' # Only cache nn_* modules
+#' fyi_cache("torch", pattern = "^nn_")
+#'
+#' # Filter fyi.md but generate all doc files
+#' fyi_cache("torch",
+#'           pattern = "^nn_",
+#'           docs_pattern = NULL)  # NULL = all docs
 #'
 #' # Force regeneration
 #' fyi_cache("torch", force = TRUE)
 #' }
-fyi_cache <- function(package, force = FALSE) {
- cache_dir <- file.path(Sys.getenv("HOME"), ".fyi", package)
+fyi_cache <- function(package, force = FALSE, pattern = NULL,
+                      max_exports = NULL, max_internals = NULL,
+                      max_topics = NULL, internals = TRUE,
+                      docs_pattern = pattern) {
+  cache_dir <- file.path(Sys.getenv("HOME"), ".fyi", package)
   fyi_path <- file.path(cache_dir, "fyi.md")
   manmd_dir <- file.path(cache_dir, "man-md")
 
@@ -39,11 +60,16 @@ fyi_cache <- function(package, force = FALSE) {
     dir.create(cache_dir, recursive = TRUE)
   }
 
-  # Generate fyi.md
-  use_fyi_md(package, path = fyi_path)
+  # Generate fyi.md (with filtering)
+  use_fyi_md(package, path = fyi_path,
+             internals = internals,
+             pattern = pattern,
+             max_exports = max_exports,
+             max_internals = max_internals,
+             max_topics = max_topics)
 
-  # Generate man-md/
-  use_fyi_docs(package, dir = manmd_dir)
+  # Generate man-md/ (possibly with different pattern)
+  use_fyi_docs(package, dir = manmd_dir, pattern = docs_pattern)
 
   message("Cached docs for '", package, "' in ", cache_dir)
   invisible(cache_dir)
@@ -77,6 +103,10 @@ fyi_cache_path <- function(package) {
 #' @param exports Logical. Include exported functions? Default TRUE.
 #' @param docs Logical. Include full documentation? Default FALSE.
 #'   Consider using use_fyi_docs() instead for individual doc files.
+#' @param pattern Optional regex to filter exports/internals/topics.
+#' @param max_exports Maximum number of exports to show. Default NULL (all).
+#' @param max_internals Maximum number of internals to show. Default NULL (all).
+#' @param max_topics Maximum number of doc topics to list. Default NULL (all).
 #' @param append Logical. Append to existing file? Default FALSE (overwrite).
 #'
 #' @return The file path, invisibly.
@@ -92,14 +122,22 @@ fyi_cache_path <- function(package) {
 #'
 #' # Custom path
 #' use_fyi_md("sttapi", path = "docs/sttapi-context.md")
+#'
+#' # For large packages, filter to reduce size
+#' use_fyi_md("torch", pattern = "^nn_", internals = FALSE)
+#' use_fyi_md("torch", max_exports = 100, max_internals = 0, max_topics = 100)
 #' }
 use_fyi_md <- function(package, path = "fyi.md", src_dir = NULL,
                        internals = TRUE, options = TRUE, exports = TRUE,
-                       docs = FALSE, append = FALSE) {
+                       docs = FALSE, pattern = NULL,
+                       max_exports = NULL, max_internals = NULL,
+                       max_topics = NULL, append = FALSE) {
   # Generate content (suppress console output)
   content <- capture.output(
     fyi(package, src_dir = src_dir, internals = internals,
-        options = options, exports = exports, docs = docs)
+        options = options, exports = exports, docs = docs,
+        pattern = pattern, max_exports = max_exports,
+        max_internals = max_internals, max_topics = max_topics)
   )
   content <- paste(content, collapse = "\n")
 
@@ -130,6 +168,10 @@ use_fyi_md <- function(package, path = "fyi.md", src_dir = NULL,
 #'
 #' @param package Character. Package name.
 #' @param dir Directory to write files. Default "man-md" in current directory.
+#' @param pattern Optional regex to filter which topics to include.
+#' @param topics Optional character vector of specific topics to include.
+#' @param exclude Optional regex pattern to exclude topics.
+#' @param exports_only Logical. Only include docs for exported functions? Default FALSE.
 #' @param clean Logical. Remove existing files in dir first? Default TRUE.
 #'
 #' @return Character vector of generated file paths, invisibly.
@@ -137,19 +179,26 @@ use_fyi_md <- function(package, path = "fyi.md", src_dir = NULL,
 #'
 #' @examples
 #' \dontrun{
-#' # Generate individual doc files
+#' # Generate all doc files
 #' use_fyi_docs("sttapi")
 #'
-#' # Creates:
-#' #   man-md/transcribe.md
-#' #   man-md/set_stt_base.md
-#' #   ...
+#' # Filter to specific patterns (torch example)
+#' use_fyi_docs("torch", pattern = "^nn_")      # Neural network modules
+#' use_fyi_docs("torch", pattern = "^optim_")   # Optimizers
+#' use_fyi_docs("torch", pattern = "^torch_")   # Tensor operations
 #'
-#' # Recommended workflow:
-#' use_fyi_md("sttapi")    # Summary in fyi.md
-#' use_fyi_docs("sttapi")  # Details in man-md/*.md
+#' # Specific topics only
+#' use_fyi_docs("torch", topics = c("nn_linear", "nn_conv2d", "nn_module"))
+#'
+#' # Exclude patterns
+#' use_fyi_docs("torch", exclude = "^nnf_")     # Skip functional variants
+#'
+#' # Only exported functions (skip internal helper docs)
+#' use_fyi_docs("torch", exports_only = TRUE)
 #' }
-use_fyi_docs <- function(package, dir = "man-md", clean = TRUE) {
+use_fyi_docs <- function(package, dir = "man-md", pattern = NULL,
+                         topics = NULL, exclude = NULL,
+                         exports_only = FALSE, clean = TRUE) {
   db <- tools::Rd_db(package)
 
   if (length(db) == 0) {
@@ -157,8 +206,49 @@ use_fyi_docs <- function(package, dir = "man-md", clean = TRUE) {
     return(invisible(character()))
   }
 
+  # Get topic names
+  topic_names <- sub("\\.Rd$", "", names(db))
+
+  # Filter by pattern
+
+  if (!is.null(pattern)) {
+    keep <- grep(pattern, topic_names)
+    db <- db[keep]
+    topic_names <- topic_names[keep]
+  }
+
+  # Filter by specific topics
+  if (!is.null(topics)) {
+    keep <- topic_names %in% topics
+    db <- db[keep]
+    topic_names <- topic_names[keep]
+  }
+
+  # Exclude pattern
+  if (!is.null(exclude)) {
+    keep <- !grepl(exclude, topic_names)
+    db <- db[keep]
+    topic_names <- topic_names[keep]
+  }
+
+  # Filter to exports only
+  if (exports_only) {
+    exports <- tryCatch(
+      getNamespaceExports(getNamespace(package)),
+      error = function(e) character()
+    )
+    keep <- topic_names %in% exports
+    db <- db[keep]
+    topic_names <- topic_names[keep]
+  }
+
+  if (length(db) == 0) {
+    message("No topics matched filters for package '", package, "'.")
+    return(invisible(character()))
+  }
+
   # Create directory
- if (!dir.exists(dir)) {
+  if (!dir.exists(dir)) {
     dir.create(dir, recursive = TRUE)
   } else if (clean) {
     # Remove existing .md files
@@ -170,9 +260,9 @@ use_fyi_docs <- function(package, dir = "man-md", clean = TRUE) {
 
   generated <- character()
 
-  for (nm in names(db)) {
-    topic_name <- sub("\\.Rd$", "", nm)
-    rd <- db[[nm]]
+  for (i in seq_along(db)) {
+    topic_name <- topic_names[i]
+    rd <- db[[i]]
 
     # Convert to markdown
     md_content <- rd2md(rd)
@@ -204,6 +294,10 @@ use_fyi_docs <- function(package, dir = "man-md", clean = TRUE) {
 #' @param options Logical. Include option names? Default TRUE.
 #' @param exports Logical. Include exported functions? Default TRUE.
 #' @param docs Logical. Include full documentation? Default FALSE (can be verbose).
+#' @param pattern Optional regex to filter exports/internals/topics.
+#' @param max_exports Maximum number of exports to show. Default NULL (all).
+#' @param max_internals Maximum number of internals to show. Default NULL (all).
+#' @param max_topics Maximum number of doc topics to list. Default NULL (all).
 #'
 #' @return Character string of markdown, invisibly. Also prints to console.
 #' @export
@@ -213,24 +307,44 @@ use_fyi_docs <- function(package, dir = "man-md", clean = TRUE) {
 #' fyi("sttapi")
 #' fyi("llamaR", internals = TRUE, options = FALSE)
 #' fyi("sttapi", docs = TRUE)  # Include full help docs
+#'
+#' # For large packages like torch, filter to reduce size
+#' fyi("torch", pattern = "^nn_", internals = FALSE)
+#' fyi("torch", max_exports = 50, max_internals = 0, max_topics = 50)
 #' }
 fyi <- function(package, src_dir = NULL, internals = TRUE, options = TRUE,
-                exports = TRUE, docs = FALSE) {
+                exports = TRUE, docs = FALSE, pattern = NULL,
+                max_exports = NULL, max_internals = NULL, max_topics = NULL) {
   sections <- character()
 
   # Header
-  sections <- c(sections, paste0("# fyi: ", package, "\n"))
+sections <- c(sections, paste0("# fyi: ", package, "\n"))
 
   # Exports
   if (exports) {
-    exp_df <- fyi_exports(package)
+    exp_df <- fyi_exports(package, pattern = pattern)
+    if (!is.null(max_exports) && nrow(exp_df) > max_exports) {
+      total <- nrow(exp_df)
+      exp_df <- exp_df[seq_len(max_exports), , drop = FALSE]
+      attr(exp_df, "truncated") <- total
+    }
     sections <- c(sections, .format_exports_md(exp_df, package), "\n")
   }
 
   # Internals
   if (internals) {
-    int_df <- fyi_internals(package)
-    sections <- c(sections, .format_internals_md(int_df, package), "\n")
+    # max_internals = 0 means skip entirely
+    if (!is.null(max_internals) && max_internals == 0) {
+      sections <- c(sections, paste0("## Internal Functions (", package, ":::)\n\n_Skipped (use internals=TRUE to include)_\n"), "\n")
+    } else {
+      int_df <- fyi_internals(package, pattern = pattern)
+      if (!is.null(max_internals) && nrow(int_df) > max_internals) {
+        total <- nrow(int_df)
+        int_df <- int_df[seq_len(max_internals), , drop = FALSE]
+        attr(int_df, "truncated") <- total
+      }
+      sections <- c(sections, .format_internals_md(int_df, package), "\n")
+    }
   }
 
   # Options
@@ -241,11 +355,12 @@ fyi <- function(package, src_dir = NULL, internals = TRUE, options = TRUE,
 
   # Documentation
   if (docs) {
-    docs_output <- capture.output(fyi_docs(package))
+    docs_output <- capture.output(fyi_docs(package, pattern = pattern))
     sections <- c(sections, paste(docs_output, collapse = "\n"), "\n")
   } else {
     # Just show topic list
-    sections <- c(sections, .format_docs_summary_md(package), "\n")
+    sections <- c(sections, .format_docs_summary_md(package, pattern = pattern,
+                                                     max_topics = max_topics), "\n")
   }
 
   result <- paste(sections, collapse = "\n")
@@ -319,8 +434,15 @@ fyi_exports <- function(package, pattern = NULL) {
     return(paste0("## Exported Functions\n\nNo exported functions found in `", package, "`.\n"))
   }
 
+  truncated <- attr(df, "truncated")
+  header <- if (!is.null(truncated)) {
+    paste0("## Exported Functions (", package, "::) [showing ", nrow(df), " of ", truncated, "]\n")
+  } else {
+    paste0("## Exported Functions (", package, "::)\n")
+  }
+
   lines <- c(
-    paste0("## Exported Functions (", package, "::)\n"),
+    header,
     "| Function | Arguments |",
     "|----------|-----------|"
   )

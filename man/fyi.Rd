@@ -10,7 +10,11 @@ fyi(
   internals = TRUE,
   options = TRUE,
   exports = TRUE,
-  docs = FALSE
+  docs = FALSE,
+  pattern = NULL,
+  max_exports = NULL,
+  max_internals = NULL,
+  max_topics = NULL
 )
 }
 \arguments{
@@ -25,6 +29,14 @@ fyi(
 \item{exports}{Logical. Include exported functions? Default TRUE.}
 
 \item{docs}{Logical. Include full documentation? Default FALSE (can be verbose).}
+
+\item{pattern}{Optional regex to filter exports/internals/topics.}
+
+\item{max_exports}{Maximum number of exports to show. Default NULL (all).}
+
+\item{max_internals}{Maximum number of internals to show. Default NULL (all).}
+
+\item{max_topics}{Maximum number of doc topics to list. Default NULL (all).}
 }
 \value{
 Character string of markdown, invisibly. Also prints to console.
@@ -39,5 +51,9 @@ documentation.
 fyi("sttapi")
 fyi("llamaR", internals = TRUE, options = FALSE)
 fyi("sttapi", docs = TRUE)  # Include full help docs
+
+# For large packages like torch, filter to reduce size
+fyi("torch", pattern = "^nn_", internals = FALSE)
+fyi("torch", max_exports = 50, max_internals = 0, max_topics = 50)
 }
 }

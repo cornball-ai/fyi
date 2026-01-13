@@ -4,12 +4,28 @@
 \alias{use_fyi_docs}
 \title{Generate Individual Documentation Files}
 \usage{
-use_fyi_docs(package, dir = "man-md", clean = TRUE)
+use_fyi_docs(
+  package,
+  dir = "man-md",
+  pattern = NULL,
+  topics = NULL,
+  exclude = NULL,
+  exports_only = FALSE,
+  clean = TRUE
+)
 }
 \arguments{
 \item{package}{Character. Package name.}
 
 \item{dir}{Directory to write files. Default "man-md" in current directory.}
+
+\item{pattern}{Optional regex to filter which topics to include.}
+
+\item{topics}{Optional character vector of specific topics to include.}
+
+\item{exclude}{Optional regex pattern to exclude topics.}
+
+\item{exports_only}{Logical. Only include docs for exported functions? Default FALSE.}
 
 \item{clean}{Logical. Remove existing files in dir first? Default TRUE.}
 }
@@ -23,16 +39,21 @@ functions.
 }
 \examples{
 \dontrun{
-# Generate individual doc files
+# Generate all doc files
 use_fyi_docs("sttapi")
 
-# Creates:
-#   man-md/transcribe.md
-#   man-md/set_stt_base.md
-#   ...
+# Filter to specific patterns (torch example)
+use_fyi_docs("torch", pattern = "^nn_")      # Neural network modules
+use_fyi_docs("torch", pattern = "^optim_")   # Optimizers
+use_fyi_docs("torch", pattern = "^torch_")   # Tensor operations
 
-# Recommended workflow:
-use_fyi_md("sttapi")    # Summary in fyi.md
-use_fyi_docs("sttapi")  # Details in man-md/*.md
+# Specific topics only
+use_fyi_docs("torch", topics = c("nn_linear", "nn_conv2d", "nn_module"))
+
+# Exclude patterns
+use_fyi_docs("torch", exclude = "^nnf_")     # Skip functional variants
+
+# Only exported functions (skip internal helper docs)
+use_fyi_docs("torch", exports_only = TRUE)
 }
 }

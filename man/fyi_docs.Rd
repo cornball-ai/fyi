@@ -4,12 +4,14 @@
 \alias{fyi_docs}
 \title{Get All Help Documentation for a Package}
 \usage{
-fyi_docs(package, topics = NULL, format = c("markdown", "text"))
+fyi_docs(package, topics = NULL, pattern = NULL, format = c("markdown", "text"))
 }
 \arguments{
 \item{package}{Character. Package name.}
 
 \item{topics}{Optional character vector of specific topics to include.}
+
+\item{pattern}{Optional regex to filter topics by name.}
 
 \item{format}{Output format: "markdown" (default, clean) or "text" (Rd2txt).}
 }
@@ -24,6 +26,7 @@ consumption.
 \dontrun{
 fyi_docs("sttapi")
 fyi_docs("sttapi", topics = c("transcribe", "set_stt_base"))
+fyi_docs("torch", pattern = "^nn_")
 fyi_docs("sttapi", format = "text")
 }
 }

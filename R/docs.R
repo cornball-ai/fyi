@@ -83,6 +83,7 @@ fyi_help <- function(topic, package, format = c("markdown", "text")) {
 #'
 #' @param package Character. Package name.
 #' @param topics Optional character vector of specific topics to include.
+#' @param pattern Optional regex to filter topics by name.
 #' @param format Output format: "markdown" (default, clean) or "text" (Rd2txt).
 #'
 #' @return Character string of markdown, invisibly. Also prints to console.
@@ -92,9 +93,11 @@ fyi_help <- function(topic, package, format = c("markdown", "text")) {
 #' \dontrun{
 #' fyi_docs("sttapi")
 #' fyi_docs("sttapi", topics = c("transcribe", "set_stt_base"))
+#' fyi_docs("torch", pattern = "^nn_")
 #' fyi_docs("sttapi", format = "text")
 #' }
-fyi_docs <- function(package, topics = NULL, format = c("markdown", "text")) {
+fyi_docs <- function(package, topics = NULL, pattern = NULL,
+                     format = c("markdown", "text")) {
   format <- match.arg(format)
   db <- tools::Rd_db(package)
 
@@ -102,6 +105,13 @@ fyi_docs <- function(package, topics = NULL, format = c("markdown", "text")) {
     msg <- paste0("No documentation found for package '", package, "'.\n")
     cat(msg)
     return(invisible(msg))
+  }
+
+  # Filter by pattern first
+  if (!is.null(pattern)) {
+    topic_names <- sub("\\.Rd$", "", names(db))
+    keep <- grep(pattern, topic_names)
+    db <- db[keep]
   }
 
   # Filter to specific topics if requested
@@ -185,17 +195,34 @@ fyi_docs <- function(package, topics = NULL, format = c("markdown", "text")) {
 #' Creates a compact summary of package documentation.
 #'
 #' @param package Character. Package name.
+#' @param pattern Optional regex to filter topics.
+#' @param max_topics Maximum number of topics to show. Default NULL (all).
 #' @return Character string of markdown
 #' @keywords internal
-.format_docs_summary_md <- function(package) {
+.format_docs_summary_md <- function(package, pattern = NULL, max_topics = NULL) {
   topics <- fyi_help_topics(package)
 
   if (length(topics) == 0) {
     return(paste0("## Documentation\n\nNo documentation found for `", package, "`.\n"))
   }
 
+  # Filter by pattern
+  if (!is.null(pattern)) {
+    topics <- grep(pattern, topics, value = TRUE)
+  }
+
+  total <- length(topics)
+
+  # Truncate if needed
+  if (!is.null(max_topics) && length(topics) > max_topics) {
+    topics <- topics[seq_len(max_topics)]
+    header <- paste0("## Documentation Topics [showing ", max_topics, " of ", total, "]\n")
+  } else {
+    header <- paste0("## Documentation Topics (", length(topics), ")\n")
+  }
+
   lines <- c(
-    paste0("## Documentation Topics (", length(topics), ")\n"),
+    header,
     "For details, read `man-md/<topic>.md` or use `fyi_help(\"topic\", \"pkg\")`.\n",
     paste0("Topics: ", paste(paste0("`", topics, "`"), collapse = ", "))
   )

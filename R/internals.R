@@ -77,8 +77,15 @@ ns <- tryCatch(
     return(paste0("## Internal Functions\n\nNo internal functions found in `", package, "`.\n"))
   }
 
+  truncated <- attr(df, "truncated")
+  header <- if (!is.null(truncated)) {
+    paste0("## Internal Functions (", package, ":::) [showing ", nrow(df), " of ", truncated, "]\n")
+  } else {
+    paste0("## Internal Functions (", package, ":::)\n")
+  }
+
   lines <- c(
-    paste0("## Internal Functions (", package, ":::)\n"),
+    header,
     "| Function | Arguments |",
     "|----------|-----------|"
   )

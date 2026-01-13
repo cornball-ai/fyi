@@ -12,6 +12,10 @@ use_fyi_md(
   options = TRUE,
   exports = TRUE,
   docs = FALSE,
+  pattern = NULL,
+  max_exports = NULL,
+  max_internals = NULL,
+  max_topics = NULL,
   append = FALSE
 )
 }
@@ -30,6 +34,14 @@ use_fyi_md(
 
 \item{docs}{Logical. Include full documentation? Default FALSE. Consider using
 use_fyi_docs() instead for individual doc files.}
+
+\item{pattern}{Optional regex to filter exports/internals/topics.}
+
+\item{max_exports}{Maximum number of exports to show. Default NULL (all).}
+
+\item{max_internals}{Maximum number of internals to show. Default NULL (all).}
+
+\item{max_topics}{Maximum number of doc topics to list. Default NULL (all).}
 
 \item{append}{Logical. Append to existing file? Default FALSE (overwrite).}
 }
@@ -50,5 +62,9 @@ use_fyi_docs("sttapi")
 
 # Custom path
 use_fyi_md("sttapi", path = "docs/sttapi-context.md")
+
+# For large packages, filter to reduce size
+use_fyi_md("torch", pattern = "^nn_", internals = FALSE)
+use_fyi_md("torch", max_exports = 100, max_internals = 0, max_topics = 100)
 }
 }

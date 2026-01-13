@@ -4,30 +4,63 @@
 \alias{fyi_cache}
 \title{Ensure Package Docs Exist in Cache}
 \usage{
-fyi_cache(package, force = FALSE)
+fyi_cache(
+  package,
+  force = FALSE,
+  pattern = NULL,
+  max_exports = NULL,
+  max_internals = NULL,
+  max_topics = NULL,
+  internals = TRUE,
+  docs_pattern = pattern
+)
 }
 \arguments{
 \item{package}{Character. Package name.}
 
 \item{force}{Logical. Regenerate even if docs exist? Default FALSE.}
+
+\item{pattern}{Optional regex to filter exports/internals/topics in fyi.md, and which
+doc files to generate in man-md/.}
+
+\item{max_exports}{Maximum exports in fyi.md. Default NULL (all).}
+
+\item{max_internals}{Maximum internals in fyi.md. Use 0 to skip. Default NULL.}
+
+\item{max_topics}{Maximum doc topics to list in fyi.md. Default NULL (all).}
+
+\item{internals}{Include internal functions in fyi.md? Default TRUE.}
+
+\item{docs_pattern}{Optional separate pattern for man-md/ files (if different from fyi.md
+pattern).}
 }
 \value{
 Path to the package's fyi directory, invisibly.
 }
 \description{
 Generates fyi.md and man-md/ docs for any installed package into a
-central cache (~/.fyi/<package>/). Use this for third-party packages
-where you can't add files to the package directory.
+central cache (~/.fyi/<package>/). Use this for all packages to keep
+documentation in a uniform location.
 }
 \examples{
 \dontrun{
-# Ensure docs exist for torch (generates if missing)
-fyi_cache("torch")
-# Returns: ~/.fyi/torch/
+# Cache all docs for a small package
+fyi_cache("sttapi")
 
-# LLM can then read:
-#   ~/.fyi/torch/fyi.md
-#   ~/.fyi/torch/man-md/nn_linear.md
+# For large packages, filter to reduce fyi.md size
+# (man-md/ files still generated for on-demand reading)
+fyi_cache("torch",
+          max_exports = 100,
+          max_internals = 0,
+          max_topics = 100)
+
+# Only cache nn_* modules
+fyi_cache("torch", pattern = "^nn_")
+
+# Filter fyi.md but generate all doc files
+fyi_cache("torch",
+          pattern = "^nn_",
+          docs_pattern = NULL)  # NULL = all docs
 
 # Force regeneration
 fyi_cache("torch", force = TRUE)
