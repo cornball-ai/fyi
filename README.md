@@ -4,16 +4,37 @@ For Your Information - R package introspection for LLMs.
 
 ## Inspiration
 
-fyi was inspired by [btw](https://github.com/jmbuhr/btw), Jannik Buhr's excellent tool for giving LLMs context about R packages. btw is designed for interactive chat interfaces and provides on-demand documentation via tool calls.
+fyi was inspired by [btw](https://github.com/posit-dev/btw), Posit's excellent toolkit for giving LLMs context about R packages.
 
-fyi takes a different approach: it generates static markdown files that can be pre-loaded into LLM context or read on-demand from disk. This makes it well-suited for:
+Both packages solve the same problem (helping LLMs understand R packages) but use different mechanisms:
 
-- **CLI-based agents** like Claude Code that read files directly
-- **Pre-seeding context** before a conversation starts
-- **Version control** - track your package docs in git
-- **Zero runtime dependencies** - base R only
+| Aspect | btw | fyi |
+|--------|-----|-----|
+| **Mechanism** | MCP tools (runtime calls) | Static files (pre-generated) |
+| **How it works** | LLM calls a tool, server returns docs | LLM reads files from disk |
+| **Best for** | Chat interfaces with tool calling | CLI agents with file access |
+| **Dependencies** | pandoc, S7, cli, etc. | Base R only |
 
-Both approaches have their place. If you're building a chat interface with tool calling, check out btw!
+### Tools vs Skills
+
+**Tools** (btw's approach): Functions the LLM can invoke at runtime. The LLM sends a request to an MCP server, which executes code and returns results. Powerful but requires a running server.
+
+```
+User: "How does speech() work?"
+LLM: [calls btw_tool_docs_help_page("speech", "ttsapi")]
+Server: [fetches Rd, converts, returns markdown]
+LLM: "Here's how it works..."
+```
+
+**Skills** (fyi's approach): Instructions that teach the LLM to read pre-generated files. No server needed - just static files on disk.
+
+```
+User: "How does speech() work?"
+LLM: [reads ~/.fyi/ttsapi/man-md/speech.md]
+LLM: "Here's how it works..."
+```
+
+fyi is designed for CLI-based agents like Claude Code that can read files directly. If you're building a chat interface with MCP tool calling, check out btw!
 
 ## What it does
 
