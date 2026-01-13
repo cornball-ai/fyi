@@ -1,5 +1,96 @@
 # fyi vs btw Comparison
 
+## Key Difference: Purpose
+
+**btw.md** and **fyi.md** serve completely different purposes:
+
+| File | Purpose | Contents |
+|------|---------|----------|
+| `btw.md` | Config for btw chat interface | Tool settings, style rules (~300 bytes) |
+| `fyi.md` | Package introspection data | Exports, internals, options (~500-2000 tokens) |
+| `man-md/*.md` | Individual function docs | Full help content per function |
+
+btw.md is a config that tells btw which tools to enable. It contains **no package information**.
+
+fyi.md contains actual package data that helps LLMs understand the API surface.
+
+### Example btw.md (84 tokens)
+
+```yaml
+---
+client: claude/claude-sonnet-4-5-20250929
+tools:
+  - docs
+  - files
+  - git
+---
+* Prefer solutions that use {tidyverse}
+* Always use `<-` for assignment
+```
+
+### Example fyi.md (457 tokens for sttapi)
+
+```markdown
+# fyi: sttapi
+
+## Exported Functions (sttapi::)
+| Function | Arguments |
+|----------|-----------|
+| `transcribe` | file, model, language, ... |
+
+## Internal Functions (sttapi:::)
+| `.get_api_base` | required |
+...
+
+## Options (sttapi)
+| `sttapi.timeout` | internal_backend.R | get |
+...
+```
+
+## Architectural Comparison
+
+| Aspect | btw | fyi |
+|--------|-----|-----|
+| **Persistent context** | Config only | Full package introspection |
+| **Doc access** | On-demand via tools | Pre-generated files |
+| **Dependencies** | pandoc, S7, cli, withr | Base R only |
+| **Design goal** | Interactive chat | Pre-loaded context |
+| **Package data in .md** | No | Yes |
+
+## Token Counts (sttapi example)
+
+| Component | btw | fyi |
+|-----------|-----|-----|
+| Config/summary file | 84 tokens | 457 tokens |
+| Per-function docs | ~500 tokens (on-demand) | ~500 tokens (man-md/) |
+| Total if all docs loaded | N/A (interactive) | 1,717 tokens |
+
+## Doc Output Quality
+
+For the same function (`transcribe`), both produce similar markdown:
+- btw: 1,941 chars via `btw_tool_docs_help_page()`
+- fyi: 1,988 chars in `man-md/transcribe.md`
+
+### btw output style
+
+```markdown
+## `help(package = "sttapi", "transcribe")`
+### Transcribe Audio
+#### Arguments
+##### `file`
+Path to the audio file...
+```
+
+### fyi output style
+
+```markdown
+### Transcribe Audio
+#### Arguments
+- **`file`**: Path to the audio file...
+```
+
+fyi uses compact list format for arguments (slightly more token-efficient)
+
 ## Token Size Comparison (fyi)
 
 ### Summary vs Full Docs

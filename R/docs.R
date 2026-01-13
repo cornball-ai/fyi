@@ -196,7 +196,7 @@ fyi_docs <- function(package, topics = NULL, format = c("markdown", "text")) {
 
   lines <- c(
     paste0("## Documentation Topics (", length(topics), ")\n"),
-    paste0("Use `fyi_help(\"topic\", \"", package, "\")` or `fyi_docs(\"", package, "\")` for full docs.\n"),
+    "For details, read `man-md/<topic>.md` or use `fyi_help(\"topic\", \"pkg\")`.\n",
     paste0("Topics: ", paste(paste0("`", topics, "`"), collapse = ", "))
   )
 

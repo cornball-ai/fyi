@@ -28,7 +28,8 @@ use_fyi_md(
 
 \item{exports}{Logical. Include exported functions? Default TRUE.}
 
-\item{docs}{Logical. Include full documentation? Default FALSE.}
+\item{docs}{Logical. Include full documentation? Default FALSE. Consider using
+use_fyi_docs() instead for individual doc files.}
 
 \item{append}{Logical. Append to existing file? Default FALSE (overwrite).}
 }
@@ -41,17 +42,13 @@ persistent LLM context in your project.
 }
 \examples{
 \dontrun{
-# Create fyi.md for a package
+# Create fyi.md for a package (summary only - recommended)
 use_fyi_md("sttapi")
+
+# Also generate individual doc files for on-demand reading
+use_fyi_docs("sttapi")
 
 # Custom path
 use_fyi_md("sttapi", path = "docs/sttapi-context.md")
-
-# Multiple packages in one file
-use_fyi_md("sttapi", path = "context.md")
-use_fyi_md("ttsapi", path = "context.md", append = TRUE)
-
-# Include full docs
-use_fyi_md("sttapi", docs = TRUE)
 }
 }
