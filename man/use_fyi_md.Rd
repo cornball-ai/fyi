@@ -50,9 +50,7 @@ The file path, invisibly.
 }
 \description{
 Generates package information and writes it to a markdown file for
-persistent LLM context in your project. Set `options(fyi.model = "Model
-Name")` to include the generating model in the file header for
-provenance tracking.
+persistent LLM context in your project.
 }
 \examples{
 \dontrun{
