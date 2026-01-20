@@ -52,12 +52,12 @@ rd2md <- function(rd) {
       "\\section" = {
         # Custom sections: first child is title, rest is content
         sec_title <- .rd_element_to_text(element[[1]])
-        sec_content <- .rd_content_to_md(element[-1])
+        sec_content <- .rd_content_to_md(element[- 1])
         if (is.null(sections$custom_sections)) {
           sections$custom_sections <- list()
         }
         sections$custom_sections <- c(sections$custom_sections,
-                                      list(list(title = sec_title, content = sec_content)))
+          list(list(title = sec_title, content = sec_content)))
       }
     )
   }
@@ -241,7 +241,7 @@ rd2md <- function(rd) {
         "\\describe" = .rd_describe_to_md(child),
         "\\itemize" = .rd_itemize_to_md(child),
         "\\enumerate" = .rd_enumerate_to_md(child),
-        "\\item" = .rd_content_to_md(child),  # handled by parent
+        "\\item" = .rd_content_to_md(child), # handled by parent
         "RCODE" = content,
         "TEXT" = content,
         "VERB" = content,
@@ -264,7 +264,7 @@ rd2md <- function(rd) {
 .rd_verbatim <- function(element) {
   text <- .rd_element_to_text(element)
   # Clean up but preserve structure
-  text <- gsub("^\\n+|\\n+$", "", text)  # Trim leading/trailing newlines
+  text <- gsub("^\\n+|\\n+$", "", text) # Trim leading/trailing newlines
   text
 }
 
@@ -340,3 +340,4 @@ rd2md <- function(rd) {
 
   paste(lines, collapse = "\n")
 }
+

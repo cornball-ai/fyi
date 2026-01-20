@@ -39,7 +39,11 @@ fyi_help_topics <- function(package) {
 #' fyi_help("transcribe", "sttapi")
 #' fyi_help("transcribe", "sttapi", format = "text")
 #' }
-fyi_help <- function(topic, package, format = c("markdown", "text")) {
+fyi_help <- function(
+  topic,
+  package,
+  format = c("markdown", "text")
+) {
   format <- match.arg(format)
 
   # Get the Rd database
@@ -96,8 +100,12 @@ fyi_help <- function(topic, package, format = c("markdown", "text")) {
 #' fyi_docs("torch", pattern = "^nn_")
 #' fyi_docs("sttapi", format = "text")
 #' }
-fyi_docs <- function(package, topics = NULL, pattern = NULL,
-                     format = c("markdown", "text")) {
+fyi_docs <- function(
+  package,
+  topics = NULL,
+  pattern = NULL,
+  format = c("markdown", "text")
+) {
   format <- match.arg(format)
   db <- tools::Rd_db(package)
 
@@ -199,7 +207,11 @@ fyi_docs <- function(package, topics = NULL, pattern = NULL,
 #' @param max_topics Maximum number of topics to show. Default NULL (all).
 #' @return Character string of markdown
 #' @keywords internal
-.format_docs_summary_md <- function(package, pattern = NULL, max_topics = NULL) {
+.format_docs_summary_md <- function(
+  package,
+  pattern = NULL,
+  max_topics = NULL
+) {
   topics <- fyi_help_topics(package)
 
   if (length(topics) == 0) {
@@ -229,3 +241,4 @@ fyi_docs <- function(package, topics = NULL, pattern = NULL,
 
   paste(lines, collapse = "\n")
 }
+

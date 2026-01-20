@@ -41,10 +41,16 @@
 #' # Force regeneration
 #' fyi_cache("torch", force = TRUE)
 #' }
-fyi_cache <- function(package, force = FALSE, pattern = NULL,
-                      max_exports = NULL, max_internals = NULL,
-                      max_topics = NULL, internals = TRUE,
-                      docs_pattern = pattern) {
+fyi_cache <- function(
+  package,
+  force = FALSE,
+  pattern = NULL,
+  max_exports = NULL,
+  max_internals = NULL,
+  max_topics = NULL,
+  internals = TRUE,
+  docs_pattern = pattern
+) {
   cache_dir <- file.path(Sys.getenv("HOME"), ".fyi", package)
   fyi_path <- file.path(cache_dir, "fyi.md")
   manmd_dir <- file.path(cache_dir, "man-md")
@@ -62,11 +68,11 @@ fyi_cache <- function(package, force = FALSE, pattern = NULL,
 
   # Generate fyi.md (with filtering)
   use_fyi_md(package, path = fyi_path,
-             internals = internals,
-             pattern = pattern,
-             max_exports = max_exports,
-             max_internals = max_internals,
-             max_topics = max_topics)
+    internals = internals,
+    pattern = pattern,
+    max_exports = max_exports,
+    max_internals = max_internals,
+    max_topics = max_topics)
 
   # Generate man-md/ (possibly with different pattern)
   use_fyi_docs(package, dir = manmd_dir, pattern = docs_pattern)
@@ -127,17 +133,26 @@ fyi_cache_path <- function(package) {
 #' use_fyi_md("torch", pattern = "^nn_", internals = FALSE)
 #' use_fyi_md("torch", max_exports = 100, max_internals = 0, max_topics = 100)
 #' }
-use_fyi_md <- function(package, path = "fyi.md", src_dir = NULL,
-                       internals = TRUE, options = TRUE, exports = TRUE,
-                       docs = FALSE, pattern = NULL,
-                       max_exports = NULL, max_internals = NULL,
-                       max_topics = NULL, append = FALSE) {
+use_fyi_md <- function(
+  package,
+  path = "fyi.md",
+  src_dir = NULL,
+  internals = TRUE,
+  options = TRUE,
+  exports = TRUE,
+  docs = FALSE,
+  pattern = NULL,
+  max_exports = NULL,
+  max_internals = NULL,
+  max_topics = NULL,
+  append = FALSE
+) {
   # Generate content (suppress console output)
   content <- capture.output(
     fyi(package, src_dir = src_dir, internals = internals,
-        options = options, exports = exports, docs = docs,
-        pattern = pattern, max_exports = max_exports,
-        max_internals = max_internals, max_topics = max_topics)
+      options = options, exports = exports, docs = docs,
+      pattern = pattern, max_exports = max_exports,
+      max_internals = max_internals, max_topics = max_topics)
   )
   content <- paste(content, collapse = "\n")
 
@@ -196,9 +211,15 @@ use_fyi_md <- function(package, path = "fyi.md", src_dir = NULL,
 #' # Only exported functions (skip internal helper docs)
 #' use_fyi_docs("torch", exports_only = TRUE)
 #' }
-use_fyi_docs <- function(package, dir = "man-md", pattern = NULL,
-                         topics = NULL, exclude = NULL,
-                         exports_only = FALSE, clean = TRUE) {
+use_fyi_docs <- function(
+  package,
+  dir = "man-md",
+  pattern = NULL,
+  topics = NULL,
+  exclude = NULL,
+  exports_only = FALSE,
+  clean = TRUE
+) {
   db <- tools::Rd_db(package)
 
   if (length(db) == 0) {
@@ -312,20 +333,29 @@ use_fyi_docs <- function(package, dir = "man-md", pattern = NULL,
 #' fyi("torch", pattern = "^nn_", internals = FALSE)
 #' fyi("torch", max_exports = 50, max_internals = 0, max_topics = 50)
 #' }
-fyi <- function(package, src_dir = NULL, internals = TRUE, options = TRUE,
-                exports = TRUE, docs = FALSE, pattern = NULL,
-                max_exports = NULL, max_internals = NULL, max_topics = NULL) {
+fyi <- function(
+  package,
+  src_dir = NULL,
+  internals = TRUE,
+  options = TRUE,
+  exports = TRUE,
+  docs = FALSE,
+  pattern = NULL,
+  max_exports = NULL,
+  max_internals = NULL,
+  max_topics = NULL
+) {
   sections <- character()
 
   # Header
-sections <- c(sections, paste0("# fyi: ", package, "\n"))
+  sections <- c(sections, paste0("# fyi: ", package, "\n"))
 
   # Exports
   if (exports) {
     exp_df <- fyi_exports(package, pattern = pattern)
     if (!is.null(max_exports) && nrow(exp_df) > max_exports) {
       total <- nrow(exp_df)
-      exp_df <- exp_df[seq_len(max_exports), , drop = FALSE]
+      exp_df <- exp_df[seq_len(max_exports),, drop = FALSE]
       attr(exp_df, "truncated") <- total
     }
     sections <- c(sections, .format_exports_md(exp_df, package), "\n")
@@ -340,7 +370,7 @@ sections <- c(sections, paste0("# fyi: ", package, "\n"))
       int_df <- fyi_internals(package, pattern = pattern)
       if (!is.null(max_internals) && nrow(int_df) > max_internals) {
         total <- nrow(int_df)
-        int_df <- int_df[seq_len(max_internals), , drop = FALSE]
+        int_df <- int_df[seq_len(max_internals),, drop = FALSE]
         attr(int_df, "truncated") <- total
       }
       sections <- c(sections, .format_internals_md(int_df, package), "\n")
@@ -360,7 +390,7 @@ sections <- c(sections, paste0("# fyi: ", package, "\n"))
   } else {
     # Just show topic list
     sections <- c(sections, .format_docs_summary_md(package, pattern = pattern,
-                                                     max_topics = max_topics), "\n")
+        max_topics = max_topics), "\n")
   }
 
   result <- paste(sections, collapse = "\n")
@@ -382,7 +412,10 @@ sections <- c(sections, paste0("# fyi: ", package, "\n"))
 #' \dontrun{
 #' fyi_exports("sttapi")
 #' }
-fyi_exports <- function(package, pattern = NULL) {
+fyi_exports <- function(
+  package,
+  pattern = NULL
+) {
   ns <- tryCatch(
     getNamespace(package),
     error = function(e) {
@@ -394,9 +427,9 @@ fyi_exports <- function(package, pattern = NULL) {
 
   # Filter to functions only
   export_fns <- Filter(function(nm) {
-    obj <- tryCatch(get(nm, envir = ns), error = function(e) NULL)
-    is.function(obj)
-  }, exports)
+      obj <- tryCatch(get(nm, envir = ns), error = function(e) NULL)
+      is.function(obj)
+    }, exports)
 
   if (!is.null(pattern)) {
     export_fns <- grep(pattern, export_fns, value = TRUE)
@@ -404,16 +437,16 @@ fyi_exports <- function(package, pattern = NULL) {
 
   if (length(export_fns) == 0) {
     return(data.frame(
-      name = character(),
-      args = character(),
-      stringsAsFactors = FALSE
-    ))
+        name = character(),
+        args = character(),
+        stringsAsFactors = FALSE
+      ))
   }
 
   args_list <- vapply(export_fns, function(nm) {
-    fn <- get(nm, envir = ns)
-    paste(names(formals(fn)), collapse = ", ")
-  }, character(1))
+      fn <- get(nm, envir = ns)
+      paste(names(formals(fn)), collapse = ", ")
+    }, character(1))
 
   data.frame(
     name = sort(export_fns),
@@ -429,7 +462,10 @@ fyi_exports <- function(package, pattern = NULL) {
 #' @param package Package name for header
 #' @return Character string of markdown
 #' @keywords internal
-.format_exports_md <- function(df, package) {
+.format_exports_md <- function(
+  df,
+  package
+) {
   if (nrow(df) == 0) {
     return(paste0("## Exported Functions\n\nNo exported functions found in `", package, "`.\n"))
   }
@@ -453,3 +489,4 @@ fyi_exports <- function(package, pattern = NULL) {
 
   paste(lines, collapse = "\n")
 }
+

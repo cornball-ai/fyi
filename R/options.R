@@ -15,7 +15,10 @@
 #' fyi_options("sttapi")
 #' fyi_options("sttapi", src_dir = "~/sttapi")
 #' }
-fyi_options <- function(package, src_dir = NULL) {
+fyi_options <- function(
+  package,
+  src_dir = NULL
+) {
   # Find R source files
   if (is.null(src_dir)) {
     pkg_path <- find.package(package, quiet = TRUE)
@@ -39,11 +42,11 @@ fyi_options <- function(package, src_dir = NULL) {
     }
     if (is.null(r_dir)) {
       return(data.frame(
-        option = character(),
-        file = character(),
-        type = character(),
-        stringsAsFactors = FALSE
-      ))
+          option = character(),
+          file = character(),
+          type = character(),
+          stringsAsFactors = FALSE
+        ))
     }
   } else {
     r_dir <- file.path(src_dir, "R")
@@ -62,8 +65,8 @@ fyi_options <- function(package, src_dir = NULL) {
 
     # Find getOption("name") patterns
     get_matches <- gregexpr('getOption\\s*\\(\\s*["\']([^"\']+)["\']', text, perl = TRUE)
-    if (get_matches[[1]][1] != -1) {
-      captures <- regmatches(text, get_matches)[[1]]
+    if (get_matches[[1]][1] != - 1) {
+      captures <- regmatches(text, get_matches) [[1]]
       opts <- sub('getOption\\s*\\(\\s*["\']([^"\']+)["\'].*', '\\1', captures)
       for (opt in opts) {
         results[[length(results) + 1]] <- list(
@@ -76,8 +79,8 @@ fyi_options <- function(package, src_dir = NULL) {
 
     # Find options(name = ...) patterns
     set_matches <- gregexpr('options\\s*\\(\\s*([a-zA-Z_.][a-zA-Z0-9_.]*)', text, perl = TRUE)
-    if (set_matches[[1]][1] != -1) {
-      captures <- regmatches(text, set_matches)[[1]]
+    if (set_matches[[1]][1] != - 1) {
+      captures <- regmatches(text, set_matches) [[1]]
       opts <- sub('options\\s*\\(\\s*([a-zA-Z_.][a-zA-Z0-9_.]+).*', '\\1', captures)
       for (opt in opts) {
         # Skip if it's just "options(op" or similar
@@ -94,11 +97,11 @@ fyi_options <- function(package, src_dir = NULL) {
 
   if (length(results) == 0) {
     return(data.frame(
-      option = character(),
-      file = character(),
-      type = character(),
-      stringsAsFactors = FALSE
-    ))
+        option = character(),
+        file = character(),
+        type = character(),
+        stringsAsFactors = FALSE
+      ))
   }
 
   df <- do.call(rbind, lapply(results, as.data.frame, stringsAsFactors = FALSE))
@@ -108,7 +111,7 @@ fyi_options <- function(package, src_dir = NULL) {
 
   # Sort by option name
 
-  df[order(df$option), ]
+  df[order(df$option),]
 }
 
 #' Format Options as Markdown
@@ -117,7 +120,10 @@ fyi_options <- function(package, src_dir = NULL) {
 #' @param package Package name for header
 #' @return Character string of markdown
 #' @keywords internal
-.format_options_md <- function(df, package) {
+.format_options_md <- function(
+  df,
+  package
+) {
   if (nrow(df) == 0) {
     return(paste0("## Options\n\nNo options found in `", package, "`.\n"))
   }
@@ -134,3 +140,4 @@ fyi_options <- function(package, src_dir = NULL) {
 
   paste(lines, collapse = "\n")
 }
+
