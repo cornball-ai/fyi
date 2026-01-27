@@ -424,13 +424,21 @@ if (is.null(src_dir)) {
       readme <- readme[-first_h1]
     }
 
-    # Get description from DESCRIPTION file
+    # Get description and GitHub URL from DESCRIPTION file
     desc_file <- file.path(src_dir, "DESCRIPTION")
+    description <- title
+    github <- NULL
     if (file.exists(desc_file)) {
       desc <- read.dcf(desc_file)
       description <- desc[1, "Title"]
-    } else {
-      description <- title
+      # Extract GitHub repo from URL field (e.g., "https://github.com/org/repo")
+      if ("URL" %in% colnames(desc)) {
+        url <- desc[1, "URL"]
+        gh_match <- regmatches(url, regexpr("github\\.com/[^/]+/[^/,\\s]+", url))
+        if (length(gh_match) > 0) {
+          github <- sub("github\\.com/", "", gh_match)
+        }
+      }
     }
 
     # Build Hugo content
@@ -438,11 +446,17 @@ if (is.null(src_dir)) {
       "---",
       paste0("title: \"", title, "\""),
       paste0("description: \"", description, "\""),
+      if (!is.null(github)) paste0("github: \"", github, "\""),
       "---",
       "",
       paste0("*Last updated: ", Sys.Date(), "*"),
       ""
     )
+
+    # Remove local image references (won't work in Hugo)
+    # Matches: <img src="local/path"...> or ![alt](local/path)
+    local_img_pattern <- "^(<img[^>]+src=\"[^/h][^\"]*\"[^>]*>|!\\[[^]]*\\]\\([^/)h][^)]*\\))\\s*$"
+    readme <- readme[!grepl(local_img_pattern, readme)]
 
     # Add reference link at end
     readme <- c(readme, "", "## Reference", "",
@@ -454,19 +468,27 @@ if (is.null(src_dir)) {
   } else {
     # No README - create minimal index
     desc_file <- file.path(src_dir, "DESCRIPTION")
+    title <- package
+    description <- paste("Documentation for", package)
+    github <- NULL
     if (file.exists(desc_file)) {
       desc <- read.dcf(desc_file)
-      title <- package
       description <- desc[1, "Title"]
-    } else {
-      title <- package
-      description <- paste("Documentation for", package)
+      # Extract GitHub repo from URL field
+      if ("URL" %in% colnames(desc)) {
+        url <- desc[1, "URL"]
+        gh_match <- regmatches(url, regexpr("github\\.com/[^/]+/[^/,\\s]+", url))
+        if (length(gh_match) > 0) {
+          github <- sub("github\\.com/", "", gh_match)
+        }
+      }
     }
 
     content <- c(
       "---",
       paste0("title: \"", title, "\""),
       paste0("description: \"", description, "\""),
+      if (!is.null(github)) paste0("github: \"", github, "\""),
       "---",
       "",
       paste0("*Last updated: ", Sys.Date(), "*"),
