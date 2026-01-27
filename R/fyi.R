@@ -459,8 +459,8 @@ if (is.null(src_dir)) {
     readme <- readme[!grepl(local_img_pattern, readme)]
 
     # Add reference link at end
-    readme <- c(readme, "", "## Reference", "",
-                paste0("See [Function Reference](reference/) for complete API documentation."))
+    readme <- c(readme, "", "## Manual", "",
+                paste0("See [Function Manual](reference/) for complete API documentation."))
 
     content <- c(front_matter, readme)
     writeLines(content, index_path)
@@ -495,9 +495,9 @@ if (is.null(src_dir)) {
       "",
       description,
       "",
-      "## Reference",
+      "## Manual",
       "",
-      "See [Function Reference](reference/) for complete API documentation."
+      "See [Function Manual](reference/) for complete API documentation."
     )
     writeLines(content, index_path)
     message("Wrote ", index_path, " (no README found)")
@@ -512,7 +512,7 @@ if (is.null(src_dir)) {
 
   lines <- c(
     "---",
-    paste0("title: \"", package, " Reference\""),
+    paste0("title: \"Manual\""),
     paste0("description: \"Function reference for ", package, "\""),
     "---"
   )
