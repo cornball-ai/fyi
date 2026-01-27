@@ -398,13 +398,9 @@ if (is.null(src_dir)) {
     src_dir <- file.path(Sys.getenv("HOME"), package)
   }
 
-  # Create directories
-  ref_dir <- file.path(dir, "reference")
+  # Create directory
   if (!dir.exists(dir)) {
     dir.create(dir, recursive = TRUE)
-  }
-  if (!dir.exists(ref_dir)) {
-    dir.create(ref_dir, recursive = TRUE)
   }
 
   # 1. Generate package overview from README
@@ -458,10 +454,6 @@ if (is.null(src_dir)) {
     local_img_pattern <- "^(<img[^>]+src=\"[^/h][^\"]*\"[^>]*>|!\\[[^]]*\\]\\([^/)h][^)]*\\))\\s*$"
     readme <- readme[!grepl(local_img_pattern, readme)]
 
-    # Add reference link at end
-    readme <- c(readme, "", "## Manual", "",
-                paste0("See [Function Manual](reference/) for complete API documentation."))
-
     content <- c(front_matter, readme)
     writeLines(content, index_path)
     message("Wrote ", index_path)
@@ -493,33 +485,15 @@ if (is.null(src_dir)) {
       "",
       paste0("*Last updated: ", Sys.Date(), "*"),
       "",
-      description,
-      "",
-      "## Manual",
-      "",
-      "See [Function Manual](reference/) for complete API documentation."
+      description
     )
     writeLines(content, index_path)
     message("Wrote ", index_path, " (no README found)")
   }
 
-  # 2. Generate reference docs
-  use_fyi_docs(package, dir = ref_dir, pattern = pattern,
+  # 2. Generate function docs directly in package dir
+  use_fyi_docs(package, dir = dir, pattern = pattern,
                exports_only = exports_only, clean = clean, format = "hugo")
-
-  # 3. Generate reference index (Hugo template lists child pages automatically)
-  ref_index_path <- file.path(ref_dir, "_index.md")
-
-  lines <- c(
-    "---",
-    paste0("title: \"", package, " | Manual\""),
-    "linkTitle: \"Manual\"",
-    paste0("description: \"Function manual for ", package, "\""),
-    "---"
-  )
-
-  writeLines(lines, ref_index_path)
-  message("Wrote ", ref_index_path)
 
   invisible(dir)
 }
