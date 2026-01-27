@@ -512,8 +512,9 @@ if (is.null(src_dir)) {
 
   lines <- c(
     "---",
-    paste0("title: \"Manual\""),
-    paste0("description: \"Function reference for ", package, "\""),
+    paste0("title: \"", package, " | Manual\""),
+    "linkTitle: \"Manual\"",
+    paste0("description: \"Function manual for ", package, "\""),
     "---"
   )
 
