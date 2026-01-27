@@ -485,25 +485,15 @@ if (is.null(src_dir)) {
   use_fyi_docs(package, dir = ref_dir, pattern = pattern,
                exports_only = exports_only, clean = clean, format = "hugo")
 
-  # 3. Generate reference index
+  # 3. Generate reference index (Hugo template lists child pages automatically)
   ref_index_path <- file.path(ref_dir, "_index.md")
-  exports <- fyi_exports(package, pattern = pattern)
 
   lines <- c(
     "---",
     paste0("title: \"", package, " Reference\""),
     paste0("description: \"Function reference for ", package, "\""),
-    "---",
-    "",
-    "## Functions",
-    ""
+    "---"
   )
-
-  for (i in seq_len(nrow(exports))) {
-    fn <- exports$name[i]
-    args <- exports$args[i]
-    lines <- c(lines, paste0("- [`", fn, "`](", fn, "/) - `", fn, "(", args, ")`"))
-  }
 
   writeLines(lines, ref_index_path)
   message("Wrote ", ref_index_path)
