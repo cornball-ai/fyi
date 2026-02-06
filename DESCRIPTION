@@ -8,6 +8,8 @@ Description: Complete R package introspection for LLM consumption. Surfaces
     help documentation. A standalone alternative to btw that requires no
     dependencies. Output is structured markdown suitable for any LLM.
 License: MIT + file LICENSE
+URL: https://github.com/cornball-ai/fyi
+BugReports: https://github.com/cornball-ai/fyi/issues
 Encoding: UTF-8
 Suggests:
     tinytest

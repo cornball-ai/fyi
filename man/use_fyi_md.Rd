@@ -44,6 +44,8 @@ Consider using use_fyi_docs() instead for individual doc files.}
 \item{max_topics}{Maximum number of doc topics to list. Default NULL (all).}
 
 \item{append}{Logical. Append to existing file? Default FALSE (overwrite).}
+
+\item{format}{Output format: "default" (HTML comments) or "hugo" (YAML front matter).}
 }
 \value{
 The file path, invisibly.

@@ -1,3 +1,6 @@
+#' @importFrom utils capture.output
+NULL
+
 #' Ensure Package Docs Exist in Cache
 #'
 #' Generates fyi.md and man-md/ docs for any installed package into a
@@ -120,6 +123,7 @@ fyi_cache_path <- function(package) {
 #' @param max_internals Maximum number of internals to show. Default NULL (all).
 #' @param max_topics Maximum number of doc topics to list. Default NULL (all).
 #' @param append Logical. Append to existing file? Default FALSE (overwrite).
+#' @param format Output format: "default" (HTML comments) or "hugo" (YAML front matter).
 #'
 #' @return The file path, invisibly.
 #' @export

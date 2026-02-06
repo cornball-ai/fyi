@@ -12,3 +12,5 @@ export(fyi_options)
 export(use_fyi_docs)
 export(use_fyi_hugo)
 export(use_fyi_md)
+
+importFrom(utils,capture.output)
