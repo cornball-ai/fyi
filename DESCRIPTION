@@ -1,6 +1,6 @@
 Package: fyi
 Title: For Your Information - R Package Introspection for LLMs
-Version: 0.1.0
+Version: 0.1.0.1
 Authors@R:
     person("Troy", "Hernandez", email = "troy@cornball.ai", role = c("aut", "cre"))
 Description: Complete R package introspection for LLM consumption. Surfaces
