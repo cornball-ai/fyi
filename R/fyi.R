@@ -311,8 +311,12 @@ use_fyi_docs <- function(
   if (!dir.exists(dir)) {
     dir.create(dir, recursive = TRUE)
   } else if (clean) {
-    # Remove existing .md files
+    # Remove existing .md files -- but never the section index:
+    # use_fyi_hugo() writes _index.md into this dir BEFORE generating the
+    # function pages, and sweeping it here deleted every package overview
+    # since the flat-layout simplification.
     existing <- list.files(dir, pattern = "\\.md$", full.names = TRUE)
+    existing <- existing[basename(existing) != "_index.md"]
     if (length(existing) > 0) {
       file.remove(existing)
     }
