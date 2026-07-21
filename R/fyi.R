@@ -438,7 +438,7 @@ if (is.null(src_dir)) {
       # Extract GitHub repo from URL field (e.g., "https://github.com/org/repo")
       if ("URL" %in% colnames(desc)) {
         url <- desc[1, "URL"]
-        gh_match <- regmatches(url, regexpr("github\\.com/[^/]+/[^/,\\s]+", url))
+        gh_match <- regmatches(url, regexpr("github\\.com/[^/]+/[^/,[:space:]]+", url))
         if (length(gh_match) > 0) {
           github <- sub("github\\.com/", "", gh_match)
         }
@@ -477,7 +477,7 @@ if (is.null(src_dir)) {
       # Extract GitHub repo from URL field
       if ("URL" %in% colnames(desc)) {
         url <- desc[1, "URL"]
-        gh_match <- regmatches(url, regexpr("github\\.com/[^/]+/[^/,\\s]+", url))
+        gh_match <- regmatches(url, regexpr("github\\.com/[^/]+/[^/,[:space:]]+", url))
         if (length(gh_match) > 0) {
           github <- sub("github\\.com/", "", gh_match)
         }
